@@ -1,4 +1,5 @@
 streamlit==1.28.1
 torch==2.0.1+cu117
 torchvision==0.15.2+cu117
-matplotlib
+matplotlib==3.8.0
+python_version==3.9.18
