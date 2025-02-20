@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>文字起こしアプリ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #transcription {
+            width: 90%;
+            max-width: 800px;
+            height: 200px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: scroll;
+            margin: 0 auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #downloadBtn {
+            display: block;
+            margin: 20px auto;
+        }
+        
+    </style>
+</head>
+<body>
+    <h1>文字起こしアプリ</h1>
+    <button id="startBtn">開始</button>
+    <button id="stopBtn">停止</button>
+    <button id="resetBtn">リセット</button>
+    <div id="transcription"></div>
+    <div id="status"></div>
+    <button id="downloadBtn">ダウンロード</button>
+
+    <script>
+        let recognition;
+        let isRecognizing = false;
+        const transcription = document.getElementById('transcription');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusDiv = document.getElementById('status');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        function voiceSetup() {
+            SpeechRecognition = webkitSpeechRecognition || SpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = "ja-JP";
+            recognition.continuous = true;
+
+            recognition.onresult = (event) => {
+                const message = event.results[event.results.length - 1][0].transcript;
+                transcription.innerHTML += message + '<br>';
+                transcription.scrollTop = transcription.scrollHeight;
+            };
+
+            recognition.onerror = (e) => {
+                if (e.error === "no-speech") {
+                    // 音声が認識されなかった場合、何もしない
+                }
+            };
+
+            recognition.onend = () => {
+                if (isRecognizing) {
+                    recognition.start();
+                }
+            };
+        }
+
+        startBtn.addEventListener('click', () => {
+            if (!isRecognizing) {
+                if (!recognition) {
+                    voiceSetup();
+                }
+                recognition.start();
+                isRecognizing = true;
+                startBtn.textContent = "再開";
+                stopBtn.textContent = "停止";
+                statusDiv.textContent = "文字起こし中";
+            } else {
+                recognition.start();
+                statusDiv.textContent = "文字起こし中";
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (isRecognizing) {
+                recognition.stop();
+                isRecognizing = false;
+                startBtn.textContent = "開始";
+                stopBtn.textContent = "停止";
+                statusDiv.textContent = "";
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            transcription.innerHTML = '';
+            statusDiv.textContent = "";
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const text = transcription.innerText;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'transcription.txt';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
